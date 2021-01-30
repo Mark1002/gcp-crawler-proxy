@@ -1,6 +1,8 @@
 #! /bin/bash
-set -ex
-IMAGE_NAME=crawler-proxy
-DOCKER_PATH=${REGISTRY_PATH}/${IMAGE_NAME}:$VERSION
-docker build -t ${DOCKER_PATH} .
-docker push ${DOCKER_PATH}
+read -r -e -p "Please enter project_id: " projectName
+gcloud config set compute/region asia-east1
+# Set project environment
+gcloud config set project "${projectName}"
+DOCKER_PATH=asia.gcr.io/${projectName}/crawler-proxy:latest
+docker build -t "${DOCKER_PATH}" .
+docker push "${DOCKER_PATH}"
