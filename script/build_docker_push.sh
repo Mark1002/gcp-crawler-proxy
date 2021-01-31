@@ -4,5 +4,5 @@ gcloud config set compute/region asia-east1
 # Set project environment
 gcloud config set project "${projectName}"
 DOCKER_PATH=asia.gcr.io/${projectName}/crawler-proxy:latest
-docker build -t "${DOCKER_PATH}" .
+docker build -t "${DOCKER_PATH}" ./squid
 docker push "${DOCKER_PATH}"
