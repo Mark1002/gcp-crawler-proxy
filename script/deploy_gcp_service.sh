@@ -62,24 +62,33 @@ if [[ $(gcloud compute health-checks list --filter squid-tcp-health-check) == ""
     gcloud compute health-checks create tcp squid-tcp-health-check --port 3128
 fi
 # create backend service
-gcloud compute backend-services create squid-tcp-lb \
-    --global-health-checks \
-    --global \
-    --protocol TCP \
-    --health-checks squid-tcp-health-check \
-    --timeout 5m \
-    --port-name squid
-gcloud compute backend-services add-backend squid-tcp-lb \
-    --global \
-    --instance-group crawler-proxy-group1 \
-    --instance-group-region asia-east1 \
-    --balancing-mode UTILIZATION \
-    --max-utilization 0.8
+if [[ $(gcloud compute backend-services list --filter squid-tcp-lb) == "" ]] ; then
+    echo "create backend service..."
+    gcloud compute backend-services create squid-tcp-lb \
+        --global-health-checks \
+        --global \
+        --protocol TCP \
+        --health-checks squid-tcp-health-check \
+        --timeout 5m \
+        --port-name squid
+    gcloud compute backend-services add-backend squid-tcp-lb \
+        --global \
+        --instance-group crawler-proxy-group1 \
+        --instance-group-region asia-east1 \
+        --balancing-mode UTILIZATION \
+        --max-utilization 0.8
+else
+    echo "backend service already exist!"
+fi
 # create tcp proxy
-gcloud compute target-tcp-proxies create squid-tcp-lb-target-proxy \
-    --backend-service squid-tcp-lb \
-    --proxy-header NONE
-
+if [[ $(gcloud compute target-tcp-proxies list --filter squid-tcp-lb-target-proxy) == "" ]] ; then
+    echo "create tcp proxy..."
+    gcloud compute target-tcp-proxies create squid-tcp-lb-target-proxy \
+        --backend-service squid-tcp-lb \
+        --proxy-header NONE
+else
+    echo "tcp proxy already exist!"
+fi
 ## static external IP
 loadBlancerIPName=crawler-lb-ip
 ### create static ip if not exist
@@ -90,8 +99,13 @@ else
     echo "static ip already exist!"
 fi
 # forwarding rule
-gcloud beta compute forwarding-rules create squid-tcp-lb-ipv4-forwarding-rule \
-    --global \
-    --target-tcp-proxy squid-tcp-lb-target-proxy \
-    --address ${loadBlancerIPName} \
-    --ports 110
+if [[ $(gcloud compute forwarding-rules list --filter squid-tcp-lb-ipv4-forwarding-rule) == "" ]] ; then
+    echo "create forwarding rule..."
+    gcloud beta compute forwarding-rules create squid-tcp-lb-ipv4-forwarding-rule \
+        --global \
+        --target-tcp-proxy squid-tcp-lb-target-proxy \
+        --address ${loadBlancerIPName} \
+        --ports 110
+else
+     echo "forwarding rule already exist!"
+fi
