@@ -1,10 +1,18 @@
 ## GCP crawler proxy
-### introduction
+### Introduction
 This project is a crawler proxy project base on GCP.
 Use Squid, the forword proxy server as the docker image running on VM group,
 and use GCP tcp proxy load balancer as the access entrypoint.
 
-
+### Build and deploy
+1. build sqiud forword proxy image.
+```
+$ ./script/build_docker_push.sh
+```
+2. deploy all GCP service.
+```
+$ ./script/deploy_gcp_service.sh 
+```
 ### reference
 
 1. https://harry-lin.blogspot.com/2019/05/docker-azuredockersquid-proxy.html
