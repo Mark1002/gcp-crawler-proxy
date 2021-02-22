@@ -13,6 +13,19 @@ $ ./script/build_docker_push.sh
 ```
 $ ./script/deploy_gcp_service.sh 
 ```
+### Usage
+```python
+import requests
+
+proxies = {
+  'https': 'http://35.190.69.208:110', # your gcp tcp proxy address
+}
+
+res = requests.get('https://ifconfig.me/', proxies=proxies)
+print(res.text)
+
+```
+
 ### reference
 
 1. https://harry-lin.blogspot.com/2019/05/docker-azuredockersquid-proxy.html
