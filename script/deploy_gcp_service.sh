@@ -45,17 +45,25 @@ if [[ $(gcloud beta compute instance-templates list --filter crawler-proxy-templ
         --container-restart-policy=always \
         --labels=container-vm=cos-stable-85-13310-1041-38
 fi
-# create instance group
-if [[ $(gcloud compute instance-groups managed list --filter crawler-proxy-group1) == "" ]] ; then
-    echo "create instance group..."
-    gcloud beta compute --project="${projectName}" instance-groups managed create crawler-proxy-group1 \
-        --base-instance-name=crawler-proxy-group1 --template=crawler-proxy-template --size=5 \
-        --zones=asia-east1-a,asia-east1-b,asia-east1-c --instance-redistribution-type=PROACTIVE
-    gcloud beta compute --project "${projectName}" instance-groups managed set-named-ports crawler-proxy-group1 \
-        --region "asia-east1" --named-ports squid:3128
-else
-    echo "instance group aleady exist!"
-fi
+ # create instance group by region
+for region in asia-east1 europe-west1 us-central1
+do
+    if [[ $(gcloud compute instance-groups managed list --filter "${region}"-crawler-proxy-pool) == "" ]] ; then
+        echo "create instance group..."
+        gcloud beta compute --project="${projectName}" instance-groups managed create "${region}"-crawler-proxy-pool \
+            --template=crawler-proxy-template --size=1 --region "${region}"
+        gcloud compute instance-groups managed set-autoscaling "${region}"-crawler-proxy-pool \
+            --region "${region}" \
+            --min-num-replicas 1 \
+            --max-num-replicas 5 \
+            --scale-based-on-load-balancing \
+            --target-load-balancing-utilization .8
+        gcloud beta compute --project "${projectName}" instance-groups managed set-named-ports "${region}"-crawler-proxy-pool \
+            --region "${region}" --named-ports squid:3128
+    else
+        echo "instance group ${region} aleady exist!"
+    fi
+done
 ### create tcp proxy load balancer
 # create health check
 if [[ $(gcloud compute health-checks list --filter squid-tcp-health-check) == "" ]] ; then
