@@ -16,6 +16,8 @@ if [[ $(gcloud compute networks list --filter crawler-proxy-vpc) == "" ]] ; then
 else
     echo "vpc network crawler-proxy-vpc aleady exist!"
 fi
+# setting region array
+regions=(asia-east1 europe-west1 us-central1)
 # create firewall rule
 if [[ $(gcloud compute firewall-rules list --filter squid-fw) == "" ]] ; then
 gcloud compute --project="${projectName}" firewall-rules create squid-fw \
@@ -25,19 +27,21 @@ gcloud compute --project="${projectName}" firewall-rules create squid-fw \
 fi
 # create vm template
 DOCKER_PATH=asia.gcr.io/${projectName}/crawler-proxy:latest
-if [[ $(gcloud beta compute instance-templates list --filter crawler-proxy-template) == "" ]] ; then
+if [[ $(gcloud beta compute instance-templates list --filter crawler-proxy-preempt-template) == "" ]] ; then
     gcloud beta compute --project="${projectName}" instance-templates \
-        create-with-container crawler-proxy-template --machine-type=e2-micro \
+        create-with-container crawler-proxy-preempt-template --machine-type=e2-micro \
         --network=projects/"${projectName}"/global/networks/crawler-proxy-vpc \
         --network-tier=PREMIUM --metadata=google-logging-enabled=true \
-        --maintenance-policy=MIGRATE --service-account="${computeDefaultServiceAccount}" \
+        --maintenance-policy=TERMINATE \
+        --preemptible \
+        --service-account="${computeDefaultServiceAccount}" \
         --scopes=https://www.googleapis.com/auth/cloud-platform \
         --tags=squid-fw \
         --image=cos-stable-85-13310-1041-38 \
         --image-project=cos-cloud \
         --boot-disk-size=10GB \
         --boot-disk-type=pd-standard \
-        --boot-disk-device-name=crawler-proxy-template \
+        --boot-disk-device-name=crawler-proxy-preempt-template \
         --no-shielded-secure-boot \
         --shielded-vtpm \
         --shielded-integrity-monitoring \
@@ -45,38 +49,49 @@ if [[ $(gcloud beta compute instance-templates list --filter crawler-proxy-templ
         --container-restart-policy=always \
         --labels=container-vm=cos-stable-85-13310-1041-38
 fi
-# create instance group
-if [[ $(gcloud compute instance-groups managed list --filter crawler-proxy-group1) == "" ]] ; then
-    echo "create instance group..."
-    gcloud beta compute --project="${projectName}" instance-groups managed create crawler-proxy-group1 \
-        --base-instance-name=crawler-proxy-group1 --template=crawler-proxy-template --size=5 \
-        --zones=asia-east1-a,asia-east1-b,asia-east1-c --instance-redistribution-type=PROACTIVE
-    gcloud beta compute --project "${projectName}" instance-groups managed set-named-ports crawler-proxy-group1 \
-        --region "asia-east1" --named-ports squid:3128
-else
-    echo "instance group aleady exist!"
-fi
+# create instance group by region
+for region in "${regions[@]}"
+do
+    if [[ $(gcloud compute instance-groups managed list --filter "${region}"-crawler-proxy-pool) == "" ]] ; then
+        echo "create instance group..."
+        gcloud beta compute --project="${projectName}" instance-groups managed create "${region}"-crawler-proxy-pool \
+            --template=crawler-proxy-preempt-template --size=1 --region "${region}"
+        gcloud compute instance-groups managed set-autoscaling "${region}"-crawler-proxy-pool \
+            --region "${region}" \
+            --min-num-replicas 1 \
+            --max-num-replicas 5 \
+            --scale-based-on-load-balancing \
+            --target-load-balancing-utilization .8
+        gcloud beta compute --project "${projectName}" instance-groups managed set-named-ports "${region}"-crawler-proxy-pool \
+            --region "${region}" --named-ports squid:3128
+    else
+        echo "instance group ${region} aleady exist!"
+    fi
+done
 ### create tcp proxy load balancer
 # create health check
 if [[ $(gcloud compute health-checks list --filter squid-tcp-health-check) == "" ]] ; then
     gcloud compute health-checks create tcp squid-tcp-health-check --port 3128
 fi
 # create backend service
-if [[ $(gcloud compute backend-services list --filter squid-tcp-lb) == "" ]] ; then
+if [[ $(gcloud compute backend-services list --filter squid-backend-service) == "" ]] ; then
     echo "create backend service..."
-    gcloud compute backend-services create squid-tcp-lb \
+    gcloud compute backend-services create squid-backend-service \
         --global-health-checks \
         --global \
         --protocol TCP \
         --health-checks squid-tcp-health-check \
         --timeout 5m \
         --port-name squid
-    gcloud compute backend-services add-backend squid-tcp-lb \
-        --global \
-        --instance-group crawler-proxy-group1 \
-        --instance-group-region asia-east1 \
-        --balancing-mode UTILIZATION \
-        --max-utilization 0.8
+    for region in "${regions[@]}"
+    do
+        gcloud compute backend-services add-backend squid-backend-service \
+            --global \
+            --instance-group "${region}"-crawler-proxy-pool \
+            --instance-group-region "${region}" \
+            --balancing-mode CONNECTION \
+            --max-connections-per-instance 1
+    done
 else
     echo "backend service already exist!"
 fi
@@ -84,7 +99,7 @@ fi
 if [[ $(gcloud compute target-tcp-proxies list --filter squid-tcp-lb-target-proxy) == "" ]] ; then
     echo "create tcp proxy..."
     gcloud compute target-tcp-proxies create squid-tcp-lb-target-proxy \
-        --backend-service squid-tcp-lb \
+        --backend-service squid-backend-service \
         --proxy-header NONE
 else
     echo "tcp proxy already exist!"
@@ -107,5 +122,5 @@ if [[ $(gcloud compute forwarding-rules list --filter squid-tcp-lb-ipv4-forwardi
         --address ${loadBlancerIPName} \
         --ports 110
 else
-     echo "forwarding rule already exist!"
+    echo "forwarding rule already exist!"
 fi
