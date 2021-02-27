@@ -78,7 +78,7 @@ if [[ $(gcloud compute backend-services list --filter squid-backend-service) == 
         --global-health-checks \
         --global \
         --protocol HTTP \
-        --health-checks squid-http-health-check \
+        --health-checks squid-tcp-health-check \
         --timeout 5m \
         --port-name squid
     # add multi instance group
