@@ -68,8 +68,8 @@ do
 done
 ### create http proxy load balancer
 # create health check
-if [[ $(gcloud compute health-checks list --filter squid-http-health-check) == "" ]] ; then
-    gcloud compute health-checks create http squid-http-health-check --port 3128
+if [[ $(gcloud compute health-checks list --filter squid-tcp-health-check) == "" ]] ; then
+    gcloud compute health-checks create tcp squid-tcp-health-check --port 3128
 fi
 # create backend service
 if [[ $(gcloud compute backend-services list --filter squid-backend-service) == "" ]] ; then
@@ -92,7 +92,7 @@ if [[ $(gcloud compute backend-services list --filter squid-backend-service) == 
             --max-rate-per-instance 100
     done
 else
-    echo "backend service ${region} already exist!"
+    echo "backend service already exist!"
 fi
 # create http proxy
 if [[ $(gcloud compute url-maps list --filter squid-lb-url-map) == "" ]] ; then
@@ -125,7 +125,7 @@ if [[ $(gcloud compute forwarding-rules list --filter squid-http-lb-ipv4-forward
         --global \
         --target-http-proxy squid-http-lb-target-proxy \
         --address ${loadBlancerIPName} \
-        --ports 110
+        --ports 80
 else
      echo "forwarding rule already exist!"
 fi
