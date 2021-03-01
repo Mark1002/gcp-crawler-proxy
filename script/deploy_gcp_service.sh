@@ -17,7 +17,7 @@ else
     echo "vpc network crawler-proxy-vpc aleady exist!"
 fi
 # setting region array
-regions=(asia-east1 europe-west1 us-central1)
+regions=(asia-east1)
 # create firewall rule
 if [[ $(gcloud compute firewall-rules list --filter squid-fw) == "" ]] ; then
 gcloud compute --project="${projectName}" firewall-rules create squid-fw \
@@ -56,12 +56,17 @@ do
         echo "create instance group..."
         gcloud beta compute --project="${projectName}" instance-groups managed create "${region}"-crawler-proxy-pool \
             --template=crawler-proxy-preempt-template --size=1 --region "${region}"
-        gcloud compute instance-groups managed set-autoscaling "${region}"-crawler-proxy-pool \
+        gcloud beta compute instance-groups managed set-autoscaling "${region}"-crawler-proxy-pool \
             --region "${region}" \
-            --min-num-replicas 1 \
-            --max-num-replicas 5 \
-            --scale-based-on-load-balancing \
-            --target-load-balancing-utilization .8
+            --min-num-replicas=0 \
+            --max-num-replicas=50 \
+            --set-schedule=workhour-capacity \
+            --schedule-cron="50 */1 * * *" \
+            --target-load-balancing-utilization=0.6 \
+            --schedule-min-required-replicas=50 \
+            --schedule-duration-sec=1800 \
+            --schedule-description="At minute 50 past every hour at Asia/Taipei." \
+            --schedule-time-zone=Asia/Taipei
         gcloud beta compute --project "${projectName}" instance-groups managed set-named-ports "${region}"-crawler-proxy-pool \
             --region "${region}" --named-ports squid:3128
     else
