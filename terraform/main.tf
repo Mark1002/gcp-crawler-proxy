@@ -1,10 +1,5 @@
 terraform {
-    required_providers {
-        google = {
-            source = "hashicorp/google"
-            version = "3.60.0"
-        }
-    }
+  backend "gcs" {}
 }
 
 provider "google" {
@@ -13,7 +8,6 @@ provider "google" {
   zone    = var.zone
 }
 
-resource "google_compute_network" "vpc_network" {
-  name = "terraform-network"
-  auto_create_subnetworks = "true"
+module "network" {
+  source = "./network"
 }

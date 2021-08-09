@@ -35,3 +35,4 @@ override.tf.json
 .envrc
 .vscode
 keys/*
+backend.conf

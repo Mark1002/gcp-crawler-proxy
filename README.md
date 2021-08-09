@@ -13,6 +13,11 @@ $ ./script/build_docker_push.sh
 ```
 $ ./script/deploy_gcp_service.sh 
 ```
+
+init terraform
+```
+$ terraform init -backend-config=backend.conf
+```
 ### Usage
 ```python
 import requests
