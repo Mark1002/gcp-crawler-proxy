@@ -36,3 +36,4 @@ override.tf.json
 .vscode
 keys/*
 backend.conf
+terraform.tfvars
