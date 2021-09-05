@@ -18,7 +18,7 @@ $ ./script/deploy_gcp_service.sh
 import requests
 
 proxies = {
-  'https': 'http://35.190.69.208:110', # your gcp tcp proxy address
+  'https': 'http://35.190.69.208:8085', # your gcp tcp proxy address
 }
 
 res = requests.get('https://ifconfig.me/', proxies=proxies)
