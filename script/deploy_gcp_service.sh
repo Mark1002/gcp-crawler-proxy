@@ -3,6 +3,7 @@
 ## set -ex
 
 read -r -e -p "Please enter project_id: " projectName
+read -r -e -p "Enable schedule close on vm group (y/n)" isEnableShe
 gcloud config set compute/region asia-east1
 # Set project environment
 gcloud config set project "${projectName}"
@@ -56,17 +57,20 @@ do
         echo "create instance group..."
         gcloud beta compute --project="${projectName}" instance-groups managed create "${region}"-crawler-proxy-pool \
             --template=crawler-proxy-preempt-template --size=1 --region "${region}"
-        gcloud beta compute instance-groups managed set-autoscaling "${region}"-crawler-proxy-pool \
-            --region "${region}" \
-            --min-num-replicas=0 \
-            --max-num-replicas=50 \
-            --set-schedule=workhour-capacity \
-            --schedule-cron="50 */1 * * *" \
-            --target-load-balancing-utilization=0.6 \
-            --schedule-min-required-replicas=50 \
-            --schedule-duration-sec=1800 \
-            --schedule-description="At minute 50 past every hour at Asia/Taipei." \
-            --schedule-time-zone=Asia/Taipei
+        if [[ ${isEnableShe} == "y" ]] ; then
+            echo "set autoscaling on instance group..."
+            gcloud beta compute instance-groups managed set-autoscaling "${region}"-crawler-proxy-pool \
+                --region "${region}" \
+                --min-num-replicas=0 \
+                --max-num-replicas=50 \
+                --set-schedule=workhour-capacity \
+                --schedule-cron="50 */1 * * *" \
+                --target-load-balancing-utilization=0.6 \
+                --schedule-min-required-replicas=50 \
+                --schedule-duration-sec=1800 \
+                --schedule-description="At minute 50 past every hour at Asia/Taipei." \
+                --schedule-time-zone=Asia/Taipei
+        fi
         gcloud beta compute --project "${projectName}" instance-groups managed set-named-ports "${region}"-crawler-proxy-pool \
             --region "${region}" --named-ports squid:3128
     else
@@ -125,7 +129,7 @@ if [[ $(gcloud compute forwarding-rules list --filter squid-tcp-lb-ipv4-forwardi
         --global \
         --target-tcp-proxy squid-tcp-lb-target-proxy \
         --address ${loadBlancerIPName} \
-        --ports 110
+        --ports 8085
 else
     echo "forwarding rule already exist!"
 fi
