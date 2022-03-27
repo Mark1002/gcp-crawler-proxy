@@ -42,3 +42,11 @@ variable "region" {
   type = string
   default = "us-central1"
 }
+
+variable "machine_type" {
+  type = string  
+}
+
+variable "named_port" {
+  type = map
+}

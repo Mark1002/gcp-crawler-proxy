@@ -22,3 +22,11 @@ variable "firewall_name" {
   type = string
   default = "crawler-proxy-fw"
 }
+
+variable "named_port" {
+  type = map
+  default = {
+    name = "squid"
+    port = 3128
+  }
+}

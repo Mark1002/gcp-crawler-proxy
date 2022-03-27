@@ -21,6 +21,7 @@ module "mig_template" {
   version              = "~> 7.3"
   network              = var.network
   service_account      = var.service_account
+  machine_type         = var.machine_type
   disk_size_gb         = 10
   disk_type            = "pd-balanced"
   access_config        = [{
@@ -46,8 +47,8 @@ resource "google_compute_region_instance_group_manager" "default" {
   target_size = 3
 
   named_port {
-    name = "squid"
-    port = 3128
+    name = var.named_port.name
+    port = var.named_port.port
   }
 
 }
