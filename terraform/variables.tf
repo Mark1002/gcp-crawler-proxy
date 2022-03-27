@@ -1,5 +1,6 @@
 variable "project_id" {
   type = string
+  default = "gen-job-dev"
 }
 
 variable "region" {
@@ -14,12 +15,10 @@ variable "zone" {
 
 variable "network_name" {
   type = string
+  default = "crawler-proxy"
 }
 
 variable "firewall_name" {
   type = string
-}
-
-variable "template_name" {
-  type = string
+  default = "crawler-proxy-fw"
 }

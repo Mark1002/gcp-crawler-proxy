@@ -5,7 +5,11 @@ terraform {
 provider "google" {
   project = var.project_id
   region  = var.region
-  zone    = var.zone
+}
+
+provider "google-beta" {
+  project = var.project_id
+  region  = var.region
 }
 
 module "network" {
@@ -14,13 +18,10 @@ module "network" {
   firewall_name = var.firewall_name
 }
 
-module "instances" {
-  source = "./instances"
+module "vm_group" {
+  source = "./vm_group"
   project_id = var.project_id
-  template_name = var.template_name
-  network_name = var.network_name
-
-  depends_on = [
-    module.network
-  ]  
+  vm_name = "crawler-proxy"
+  container_image = "asia.gcr.io/${var.project_id}/crawler-proxy:latest"
+  network = module.network.network_name
 }
