@@ -1,9 +1,11 @@
 #! /bin/bash
 
-## set -ex
+set -e
 
 read -r -e -p "Please enter project_id: " projectName
-gcloud config set compute/region asia-east1
+read -r -e -p "enter your proxy region ex:(asia-east1)" region
+read -r -e -p "enter proxy vm number: " VM_NUM
+
 # Set project environment
 gcloud config set project "${projectName}"
 # get compute default service account
@@ -17,7 +19,7 @@ else
     echo "vpc network crawler-proxy-vpc aleady exist!"
 fi
 # setting region array
-regions=(asia-east1)
+regions=("${region}")
 # create firewall rule
 if [[ $(gcloud compute firewall-rules list --filter squid-fw) == "" ]] ; then
 gcloud compute --project="${projectName}" firewall-rules create squid-fw \
@@ -55,7 +57,7 @@ do
     if [[ $(gcloud compute instance-groups managed list --filter "${region}"-crawler-proxy-pool) == "" ]] ; then
         echo "create instance group..."
         gcloud beta compute --project="${projectName}" instance-groups managed create "${region}"-crawler-proxy-pool \
-            --template=crawler-proxy-preempt-template --size=10 --region "${region}"
+            --template=crawler-proxy-preempt-template --size="${VM_NUM}" --region "${region}"
         gcloud beta compute --project "${projectName}" instance-groups managed set-named-ports "${region}"-crawler-proxy-pool \
             --region "${region}" --named-ports squid:3128
     else
