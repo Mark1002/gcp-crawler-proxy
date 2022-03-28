@@ -5,18 +5,26 @@ Use Squid, the forword proxy server as the docker image running on VM group,
 and use GCP tcp proxy load balancer as the access entrypoint.
 
 ### Build and deploy
-1. build sqiud forword proxy image.
+1. build sqiud forword proxy docker image.
 ```
 $ ./script/build_docker_push.sh
 ```
-2. deploy all GCP service.
+2. create tf backend gcs and add backend.cof
 ```
-$ ./script/deploy_gcp_service.sh 
+$ ./script/create_state_bucket.sh 
 ```
-
-init terraform
+backend.conf
+```
+bucket  = "<tf backend gcs>"
+prefix  = "<terraform state prefix>"
+```
+3. init terraform
 ```
 $ terraform init -backend-config=backend.conf
+```
+4. apply terraform
+```
+$ terraform apply
 ```
 ### Usage
 ```python
