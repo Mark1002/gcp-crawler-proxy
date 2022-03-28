@@ -44,7 +44,7 @@ resource "google_compute_region_instance_group_manager" "default" {
   }
   base_instance_name = "${var.vm_name}"
 
-  target_size = 3
+  target_size = var.target_size
 
   named_port {
     name = var.named_port.name

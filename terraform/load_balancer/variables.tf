@@ -5,3 +5,7 @@ variable "lb_name" {
 variable "vm_group" {
   type = string
 }
+
+variable "health_check_port" {
+  type = string
+}

@@ -40,7 +40,6 @@ variable "service_account" {
 
 variable "region" {
   type = string
-  default = "us-central1"
 }
 
 variable "machine_type" {
@@ -49,4 +48,8 @@ variable "machine_type" {
 
 variable "named_port" {
   type = map
+}
+
+variable "target_size" {
+  type = number
 }

@@ -8,11 +8,6 @@ variable "region" {
   default = "asia-east1"
 }
 
-variable "zone" {
-  type    = string
-  default = "asia-east1-b"
-}
-
 variable "network_name" {
   type = string
   default = "crawler-proxy"
