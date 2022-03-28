@@ -1,6 +1,5 @@
 variable "project_id" {
   type = string
-  default = "gen-job-dev"
 }
 
 variable "region" {
@@ -24,4 +23,8 @@ variable "named_port" {
     name = "squid"
     port = 3128
   }
+}
+
+variable "service_account" {
+  type = string
 }

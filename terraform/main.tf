@@ -26,6 +26,7 @@ module "vm_group" {
   named_port = var.named_port
   container_image = "asia.gcr.io/${var.project_id}/crawler-proxy:latest"
   network = module.network.network_name
+  service_account = var.service_account
 }
 
 module "load_balancer" {

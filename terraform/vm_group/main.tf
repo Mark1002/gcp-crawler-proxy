@@ -20,7 +20,18 @@ module "mig_template" {
   source               = "terraform-google-modules/vm/google//modules/instance_template"
   version              = "~> 7.3"
   network              = var.network
-  service_account      = var.service_account
+  service_account      = {
+    email = var.service_account
+    scopes = [
+      "https://www.googleapis.com/auth/cloud_debugger",
+      "https://www.googleapis.com/auth/servicecontrol",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring.write",
+      "https://www.googleapis.com/auth/trace.append",
+      "https://www.googleapis.com/auth/devstorage.read_only"
+    ]
+  }
   machine_type         = var.machine_type
   disk_size_gb         = 10
   disk_type            = "pd-balanced"
