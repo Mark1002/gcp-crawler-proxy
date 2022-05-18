@@ -44,6 +44,7 @@ module "mig_template" {
   source_image_project = "cos-cloud"
   source_image         = reverse(split("/", module.gce-container.source_image))[0]
   metadata             = { "gce-container-declaration" = module.gce-container.metadata_value }
+  preemptible          = true
 }
 
 resource "google_compute_region_instance_group_manager" "default" {
