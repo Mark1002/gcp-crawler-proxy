@@ -1,5 +1,7 @@
 #! /bin/sh
 set -e
+PROJECT_ID=gen-job-dev
+gcloud config set project "$PROJECT_ID"
 
 IP=$1
 if [ "$IP" = "" ]; then
