@@ -10,7 +10,7 @@ INS_GROUP=crawler-proxy-ins-group
 VM_NAME=$(gcloud compute instances list --filter=name:crawler-proxy --format="value(name,EXTERNAL_IP)" | grep "$IP" | cut -f 1)
 
 if [ "$VM_NAME" = "" ]; then
-    echo "VM is not match, your ip is invalid."
+    echo "VM is not match, your ip $IP is invalid."
     exit 1
 fi
 
