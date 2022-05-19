@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -36,6 +37,17 @@ func main() {
 	}
 }
 
+func executeShellScript(ctx context.Context, args ...string) {
+	log.Println("start cmd..")
+	cmd := exec.CommandContext(ctx, "/bin/sh", args...)
+	cmd.Stderr = os.Stderr
+	out, err := cmd.Output()
+	if err != nil {
+		log.Println("Stderr:", err)
+	}
+	log.Println("Stdout:", string(out))
+}
+
 func scriptHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/rotate_proxy" {
 		http.Error(w, "404 not found.", http.StatusNotFound)
@@ -46,21 +58,15 @@ func scriptHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "invalid")
 	case "POST":
 		reqBody, _ := ioutil.ReadAll(r.Body)
-		var resp Resp
 		var data Data
 		json.Unmarshal(reqBody, &data)
-		cmd := exec.CommandContext(r.Context(), "/bin/sh", "rotate_proxy.sh", data.IP)
-		cmd.Stderr = os.Stderr
-		out, err := cmd.Output()
-		if err != nil {
-			w.WriteHeader(500)
-			resp.Status = "error"
-		} else {
-			w.WriteHeader(http.StatusCreated)
-			resp.Status = "ok"
-		}
+		ctx := context.Background()
+		go executeShellScript(ctx, "rotate_proxy.sh", data.IP)
 		w.Header().Set("Content-Type", "application/json")
-		resp.Message = string(out)
+		resp := Resp{
+			Status:  "ok",
+			Message: "finish submit request.",
+		}
 		jsonResp, _ := json.Marshal(resp)
 		w.Write(jsonResp)
 	default:
