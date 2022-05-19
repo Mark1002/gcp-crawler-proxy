@@ -22,7 +22,14 @@ prefix  = "<terraform state prefix>"
 ```
 $ terraform init -backend-config=backend.conf
 ```
-4. apply terraform
+4. create terraform.tfvars to apply your env.
+```
+project_id = "<GCP PROJECT ID>"
+service_account = "<SVC NAME>@<GCP PROJECT ID>.iam.gserviceaccount.com"
+region = "us-central1"
+target_size = 100
+```
+5. apply terraform
 ```
 $ terraform apply
 ```

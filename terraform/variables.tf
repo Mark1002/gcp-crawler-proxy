@@ -28,3 +28,8 @@ variable "named_port" {
 variable "service_account" {
   type = string
 }
+
+variable "target_size" {
+  type = number
+  default = 5
+}

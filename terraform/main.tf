@@ -22,7 +22,7 @@ module "vm_group" {
   vm_name = "crawler-proxy"
   machine_type = "e2-micro"
   region = var.region
-  target_size = 5
+  target_size = var.target_size
   named_port = var.named_port
   container_image = "asia.gcr.io/${var.project_id}/crawler-proxy:latest"
   network = module.network.network_name
