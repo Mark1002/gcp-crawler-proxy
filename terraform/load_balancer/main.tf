@@ -6,12 +6,12 @@ resource "google_compute_target_tcp_proxy" "default" {
 resource "google_compute_backend_service" "default" {
   name        = "${var.lb_name}-backend-service"
   protocol    = "TCP"
-  port_name = "squid"
+  port_name   = "squid"
   timeout_sec = 10
 
   backend {
-    group          = var.vm_group
-    balancing_mode = "UTILIZATION"
+    group           = var.vm_group
+    balancing_mode  = "UTILIZATION"
     capacity_scaler = 1.0
     max_utilization = 1.0
   }

@@ -8,17 +8,17 @@ variable "region" {
 }
 
 variable "network_name" {
-  type = string
+  type    = string
   default = "crawler-proxy"
 }
 
 variable "firewall_name" {
-  type = string
+  type    = string
   default = "crawler-proxy-fw"
 }
 
 variable "named_port" {
-  type = map
+  type = map(any)
   default = {
     name = "squid"
     port = 3128
@@ -30,6 +30,6 @@ variable "service_account" {
 }
 
 variable "target_size" {
-  type = number
+  type    = number
   default = 5
 }

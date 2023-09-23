@@ -1,5 +1,5 @@
 variable "project_id" {
-  type        = string
+  type = string
 }
 
 variable "network" {
@@ -12,11 +12,11 @@ variable "vm_name" {
 }
 
 variable "container_image" {
-    type = string
+  type = string
 }
 
 variable "DOCKER_IMAGE_ENV" {
-  type = map(string)
+  type    = map(string)
   default = {}
 }
 variable "service_account" {
@@ -28,11 +28,11 @@ variable "region" {
 }
 
 variable "machine_type" {
-  type = string  
+  type = string
 }
 
 variable "named_port" {
-  type = map
+  type = map(any)
 }
 
 variable "target_size" {
